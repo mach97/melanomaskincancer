@@ -1,7 +1,26 @@
-#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/opencv.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <iostream>
+#include <string>
+#include <math.h>
 using namespace cv;
+using namespace std;
+
+Mat paso1(Mat img_rgb){
+	Mat img_hsv,eqv,hsveq,out;
+	cvtColor(img_rgb,img_hsv,CV_RGB2HSV);
+	vector<cv::Mat> channels;
+	split(img_hsv, channels);
+	equalizeHist(channels[2], eqv );
+	channels[2]=eqv;
+	merge(channels,hsveq);
+	cvtColor(hsveq,out,CV_HSV2RGB);
+	cvtColor(out,out,CV_RGB2GRAY);
+	Mat image_blurred_with_11x11_kernel;
+    	GaussianBlur(out, image_blurred_with_11x11_kernel, Size(11, 11), 0);
+	Mat binary;
+	threshold( out, binary, 50, 255,1 );
+    	return binary;}
 
 void generateHistogram(Mat image, int histogram[])
 {
@@ -63,8 +82,8 @@ int main( int argc, char** argv )
 {
   
 	Mat image;
-	image = cv::imread("/home/andres/Escritorio/ImageProce/Lab8/dataset/melanoma-skin-cancer.jpg" , CV_LOAD_IMAGE_GRAYSCALE);
-	Mat image1= imread("/home/andres/Escritorio/ImageProce/Lab8/dataset/melanoma-skin-cancer.jpg", CV_LOAD_IMAGE_COLOR);
+	image = cv::imread("melanoma2.png" , CV_LOAD_IMAGE_GRAYSCALE);
+	Mat image1= imread("melanoma2.png", CV_LOAD_IMAGE_COLOR);
     
 	if(!image.data or !image1.data) 
 	{
@@ -112,13 +131,17 @@ int main( int argc, char** argv )
       	}	
 	threshold(image,imageRes,OPT_TH,255,0);
 	
-	//Canny(imageRes,imageRes,20,100,3);	
-	namedWindow("image",WINDOW_NORMAL);
-	resizeWindow("image",450,450);
-	imshow("image",imageRes);
 	namedWindow("Original",WINDOW_NORMAL);
 	resizeWindow("Original",450,450);
 	imshow("Original",image1);
+	Mat ires=paso1(image1);	
+	namedWindow("Biggest Blob",WINDOW_NORMAL);
+	resizeWindow("Biggest Blob",450,450);
+	imshow("Biggest Blob",ires);
+	Canny(ires,ires,20,100,3);
+	namedWindow("Edge Detection",WINDOW_NORMAL);
+	resizeWindow("Edge Detection",450,450);
+	imshow("Edge Detection",ires);
   	waitKey(0);
   	return 0;
 }
